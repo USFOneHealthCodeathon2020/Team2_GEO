@@ -90,6 +90,7 @@ physeq=phyloseq(otum,taxmeb,mus,tree)
 pr=prune_samples(sample_sums(physeq)>20,physeq)
 pr=transform_sample_counts(pr,function(x) x/ sum(x))
 pfr=filter_taxa(pr,function(x) mean(x) > 1e-5,TRUE)
+p=plot_bar(pfr,"SAMPLETYPE","Abundance",",Phylum")
 #pfr_ab=prune_samples(sample_sums(pfr)>=20, TRUE)
 #
 
@@ -123,11 +124,20 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 world <- ne_countries(scale='medium',returnclass = 'sf')
 usa <- subset(world, admin == "United States of America")
-st_intersects
+#st_intersects
 sampd2= sampd %>% filter(!(LONGITUDE %in% c("Unknown", "Unspecified","no_data") ))
 
-smpsf=st_as_sf(sampd2,coords=c("LONGITUDE","LATITUDE"))
+sampd2$LONGITUDE=as.numeric(sampd2$LONGITUDE)
+sampd2$LATITUDE=as.numeric(sampd2$LATITUDE)
+
+smpsf=st_as_sf(sampd2,coords=c("LONGITUDE","LATITUDE"),crs=4326)
+#default lat/lon coordinate system is 4326
 st_crs(smpsf)=4326
+
+
+
+smpsf= 
+us_samp2=
 us_samp = st_join(smpsf,usa,join=st_within)
 
 sampo=as.data.frame(us_samp)
