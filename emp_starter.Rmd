@@ -1,0 +1,141 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+library(tidyverse)
+dblur=read_tsv("emp_deblur_90bp.subset_2k.rare_5000.biom")
+emp=read.table("emp_qiime_mapping_release1.tsv")
+emp=read_tsv("emp_qiime_mapping_release1_fixed.tsv",n_max=50)
+emp=spec_tsv("emp_qiime_mapping_release1_fixed.tsv")
+emp2k=read_tsv("emp_qiime_mapping_subset_2k.tsv")
+#78 instead of 76 right now check with nchar
+cols="cccccdcccccccccccddddddddllllldcicccccccccccTcdddddcccccccccccccdddddddddddd"
+cols_condense(emp)
+emp=read.table("emp_qiime_mapping_release1.tsv",row.names=F)
+emp=read_tsv("emp_qiime_mapping_release1_fixed.tsv",skip=377)
+emp=read_tsv("emp_qiime_mapping_release1.tsv",col_types=cols)
+
+empr=read_lines("emp_qiime_mapping_release1.tsv",skip=1,n_max=1)
+#basic recreation of major clades per area
+
+#maybe vroom? proble not?inst
+library(vroom)
+#purrr:iwalk(split(.,.))
+emp=vroom::vroom("emp_qiime_mapping_release1_fixed.tsv")
+
+dblur=read_tsv
+hrm=biomformat::read_biom("emp_deblur_90bp.subset_2k.rare_5000.biom")
+hrm=biomformat::read_biom("emp_deblur_90bp.release1.biom")
+df1=read_tsv("emp_qiime_mapping_release1_fixed.tsv")
+typeof(df1)
+df1
+
+emp=read_tsv("emp_qiime_mapping_release1_fixed.tsv",n_max=200)
+
+library(data.table)
+
+emp=fread("emp_qiime_mapping_release1_fixed.tsv")
+
+library(phylogeo)
+library(ggplot2)
+library(gridExtra)
+data(mountainsoil)
+data(batmicrobiome)
+data(epoxomicin_KS)
+
+map_network(batmicrobiome)
+
+htmlmap_network(batmicrobiome)
+```
+
+```{r}
+library(phyloseq)
+library(readr)
+library(biomformat)
+
+#df=read_tsv("american_gut_qiita.txt")
+#need to do this on cluster
+otu=biomformat::read_biom("03-otus/100nt/gg-13_8-97-percent/otu_table.biom")
+#otu=biomformat::read_biom('./otu_table.biom')
+#get taxa table from otu
+#general rule of thumb, phyloseq has problems with matrix objects
+#better to go with formatted dataframes, weird as that sounds
+#or looped back from matrix
+mebtax=observation_metadata(otu)
+mebtaxm=as.matrix(mebtax) #tax table
+sdf=biom_data(otu) 
+
+tree=ape::read.tree("03-otus/100nt/gg-13_8-97-percent/97_otus.tree")
+tree$tip.label
+gah=as.data.frame(as(sdf,"matrix"))
+colnames(gah)=paste0("X",colnames(gah))
+otum=otu_table(gah,taxa_are_rows=TRUE)
+taxmeb=tax_table(mebtaxm)  #tax table
+#otu table
+#sdfm=otu_table(sdf,taxa_are_rows=T)
+mus=read_csv('ag-pgp-hmp-gg-cleaned-usonly.csv')
+mus=as.data.frame(mus)
+rownames(mus)=mus[,1]
+mus=mus[,-1]
+rownames(mus)=paste0("X",rownames(mus))
+musm=sample_data(mus)
+#check sample names with sample_names()
+physeq=phyloseq(otum,taxmeb,mus,tree)
+pr=prune_samples(sample_sums(physeq)>20,physeq)
+pr=transform_sample_counts(pr,function(x) x/ sum(x))
+pfr=filter_taxa(pr,function(x) mean(x) > 1e-5,TRUE)
+#pfr_ab=prune_samples(sample_sums(pfr)>=20, TRUE)
+#
+
+
+#problems with it as a matrix slot
+#musm=as.matrix(mus)
+#ro
+#rownames(musm)=paste0("X",rownames(musm))
+
+#reduce sdf down to usf samples (on column)
+sdf2=sdf[,colnames(sdf) %in% rownames(mus)]
+tax=read_tsv("/work/t/tekeller/microbiome_ml/07-taxa/100nt/otu_table_L2.biom")
+tax2=as.data.frame(tax)
+tax2=tax2[tax2[,1] %in% rownames(mus),]
+observation_metadata(otu)
+sample_metadata(otu)
+library(ape)
+otre=ape::read.tree("03-otus/100nt/gg-13_8-97-percent/97_otus.tree")
+
+tax=biomformat::read_biom("04-meta/ag-gg-100nt.biom")
+physeq=phyloseq(otu,tax)?
+
+hm=intersect(otu,tax)
+
+
+sampd=read_tsv("04-meta/ag-pgp-hmp-gg-cleaned.txt")
+
+library(leaflet)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata)
+world <- ne_countries(scale='medium',returnclass = 'sf')
+usa <- subset(world, admin == "United States of America")
+st_intersects
+sampd2= sampd %>% filter(!(LONGITUDE %in% c("Unknown", "Unspecified","no_data") ))
+
+smpsf=st_as_sf(sampd2,coords=c("LONGITUDE","LATITUDE"))
+st_crs(smpsf)=4326
+us_samp = st_join(smpsf,usa,join=st_within)
+
+sampo=as.data.frame(us_samp)
+
+library(maps)
+ll=data.frame(Lat=as.numeric(sampd2$LATITUDE),Lon=as.numeric(sampd2$LONGITUDE))
+leaflet(ll) %>% addTiles() %>% addCircles()
+
+tax=read_tsv('07-taxa/100nt/ag-cleaned_L2.txt')
+
+```
