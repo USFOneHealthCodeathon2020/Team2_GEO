@@ -1,3 +1,30 @@
+
+Skip to content
+Pull requests
+Issues
+Marketplace
+Explore
+@thomas-keller
+USFOneHealthCodeathon2020 /
+Team2_GEO
+
+2
+1
+
+    0
+
+Code
+Issues 0
+Pull requests 0
+Actions
+Projects 0
+Wiki
+Security
+Insights
+Settings
+Team2_GEO/emp_starter.Rmd
+@thomas-keller thomas-keller Add files via upload 076063c 34 minutes ago
+216 lines (165 sloc) 6.34 KB
 ---
 title: "R Notebook"
 output: html_notebook
@@ -20,40 +47,32 @@ cols_condense(emp)
 emp=read.table("emp_qiime_mapping_release1.tsv",row.names=F)
 emp=read_tsv("emp_qiime_mapping_release1_fixed.tsv",skip=377)
 emp=read_tsv("emp_qiime_mapping_release1.tsv",col_types=cols)
-
 empr=read_lines("emp_qiime_mapping_release1.tsv",skip=1,n_max=1)
 #basic recreation of major clades per area
-
 #maybe vroom? proble not?inst
 library(vroom)
 #purrr:iwalk(split(.,.))
 emp=vroom::vroom("emp_qiime_mapping_release1_fixed.tsv")
-
 dblur=read_tsv
 hrm=biomformat::read_biom("emp_deblur_90bp.subset_2k.rare_5000.biom")
 hrm=biomformat::read_biom("emp_deblur_90bp.release1.biom")
 df1=read_tsv("emp_qiime_mapping_release1_fixed.tsv")
 typeof(df1)
 df1
-
 emp=read_tsv("emp_qiime_mapping_release1_fixed.tsv",n_max=200)
-
 library(data.table)
-
 emp=fread("emp_qiime_mapping_release1_fixed.tsv")
-
 library(phylogeo)
 library(ggplot2)
 library(gridExtra)
 data(mountainsoil)
 data(batmicrobiome)
 data(epoxomicin_KS)
-
 map_network(batmicrobiome)
-
 htmlmap_network(batmicrobiome)
 ```
 
+```{r}
 library(phyloseq)
 library(readr)
 library(biomformat)
@@ -82,25 +101,36 @@ mus=read_csv('ag-pgp-hmp-gg-cleaned_wll.csv')
 mus=as.data.frame(mus)
 rownames(mus)=mus[,1]
 mus=mus[,-1]
-rownames(mus)=paste0("X",rownames(mus))
+rownames(mus)=paste0("X",rownames(mus> samp2=as.data.frame(samp2))
+samp2=read_csv("samps_wcontam.csv")
+rownames(samp2)=samp2[,1]                                          
+samp2=samp2[,-1]                                                   
+rownames(samp2)=paste0("X",rownames(samp2))                        
+ssmall=sample_data(samp2)))
 musm=sample_data(mus)
 #check sample names with sample_names()
+
 physeq=phyloseq(otum,taxmeb,musm,tree)
+physmall=phyloseq(otum,taxmeb,ssmall,tree)
+prs=transform_sample_counts(physmall,function(x) x/sum(x))
+prs=filter_taxa(prs,function(x) mean(x) 1e-5, TRUE)
 pr=prune_samples(sample_sums(physeq)>20,physeq)
 pr=transform_sample_counts(pr,function(x) x/ sum(x))
+
 pfr=filter_taxa(pr,function(x) mean(x) > 1e-5,TRUE)
+
+
 saveRDS("phyloseq_filtered.RDS")
+
+```
 ```{r}
 #p=plot_bar(pfr,"SAMPLETYPE","Abundance",",Phylum")
 #pfr_ab=prune_samples(sample_sums(pfr)>=20, TRUE)
 #
-
-
 #problems with it as a matrix slot
 #musm=as.matrix(mus)
 #ro
 #rownames(musm)=paste0("X",rownames(musm))
-
 #reduce sdf down to usf samples (on column)
 sdf2=sdf[,colnames(sdf) %in% rownames(mus)]
 tax=read_tsv("/work/t/tekeller/microbiome_ml/07-taxa/100nt/otu_table_L2.biom")
@@ -110,15 +140,11 @@ observation_metadata(otu)
 sample_metadata(otu)
 library(ape)
 otre=ape::read.tree("03-otus/100nt/gg-13_8-97-percent/97_otus.tree")
-
 tax=biomformat::read_biom("04-meta/ag-gg-100nt.biom")
 physeq=phyloseq(otu,tax)?
-
 hm=intersect(otu,tax)
-
-
 sampd=read_tsv("04-meta/ag-pgp-hmp-gg-cleaned.txt")
-
+sampd=read_csv("samps_wcontam.csv")
 library(leaflet)
 library(sf)
 library(rnaturalearth)
@@ -129,59 +155,66 @@ usa <- subset(world, admin == "United States of America")
 #st_intersects
 sampd2= sampd %>% filter(!(LONGITUDE %in% c("Unknown", "Unspecified","no_data") ))
 write_csv(sampd2,"ag-pgp-hmp-gg-cleaned_wll.csv")
-
 sampd2$LONGITUDE=as.numeric(sampd2$LONGITUDE)
 sampd2$LATITUDE=as.numeric(sampd2$LATITUDE)
 dat=data.frame(id=sampd2[,1],lon=as.numeric(sampd2$LONGITUDE),lat=as.numeric(sampd2$LATITUDE))
-
 smpsf=st_as_sf(dat,coords=c("lon","lat"),crs=4326)
 #default lat/lon coordinate system is 4326
 #st_crs(smpsf)=4326
-
-
-
 #smpsf= 
 #us_samp2=
 us_samp = st_join(smpsf,usa,join=st_within)
-
 hm=as.data.frame(us_samp)0
 coord=st_coordinates(hm)
 hm=rbind(hm,coord)
 #sampo=as.data.frame(us_samp)
-
 library(maps)
 ll=data.frame(Lat=as.numeric(sampd2$LATITUDE),Lon=as.numeric(sampd2$LONGITUDE))
 leaflet(ll) %>% addTiles() %>% addCircles()
-
 tax=read_tsv('07-taxa/100nt/ag-cleaned_L2.txt')
-
 ```
 
 ml stuff
 
-
+Contaminant_NameARSENIC
+Contaminant_NameBENZENE
+Contaminant_NameMERCURY
 ```{r}
 p=readRDS('phyloseq_filtered.RDS')
+prs=readRDS("physmall.RDS")
+  dm=data.frame(sample_data(prs)$Contaminant_NameARSENIC,t(otu_table(prs)))
+colnames(dm)[1]="arsenic"
+dm$arsenic=as.factor(dm$arsenic)
+trainingdm <- sample(rownames(dm), size = 900)
+inTrain <- which(rownames(dm) %in% trainingdm)
+training <- dm[inTrain,]
+testing <- dm[-inTrain,]
+
+library(ranger)
+library(caret)
+library(doParallel)
+cl <- makePSOCKcluster(8)
+registerDoParallel(cl)
+rffit=train(arsenic~.,data=dm,method="ranger",preProc="center")
+rfclass=predict(rffit,newdata=testing$arsenic)
+table(rfclass,testing$arsenic)
+
+imp=importance(rffit)
+
 library(phylogeo)
 pr=transform_sample_counts(p,function(OTU) OTU/ sum(OTU))
-
 dm=data.frame(stype=sample_data(pr)$SAMPLETYPE,otu_table(pr))
-
-
 library(SIAMCAT)
-
 wow=read_csv("Superfund_final_dataset.csv")
 prs=st_as_sf(pr)
 wow2=wow %>% filter(!is.na(latitude))
 wow2=wow2 %>% filter(!is.na(longitude))
 wow3= wow2 %>% distinct(EPA_ID,Contaminant_Name,.keep_all=T)
 contam=st_as_sf(wow3,coords=c("longitude","latitude"),crs=4326) # need to give the columns
-
 #smpsf is the lat lon of the agp data
 supf=st_join(contam,smpsf,join=st_is_within_distance,dist=5000)
 nosup=st_join(contam,smpsf,join=st_is_within_distance,dist=10000)
 nosup=st_difference(nosup,supf)
-
 library(data.table)
 library(dummies)
 sup2=supf %>% filter(!is.na(X.SampleID))
@@ -189,28 +222,37 @@ sup3=dummy.data.frame(sup2,names="Contaminant_Name")
 sup2 <- sup2 %>% separate_rows(Contaminant_Name, sep = ",")
 sup2$Contaminant_Name <- trimws(sup2$Contaminant_Name, "both")
 sup3=dummy.data.frame(sup2,)
-
 outf=sup3 %>% distinct(X.SampleID,.keep_all=T)
 out2= inner_join(sampd,outf,by=c("#SampleID"="X.SampleID"))
 write_csv(out2,"samps_wcontam.csv")
-
-
 #supf2=setDT(supf)[,strsplit(Contaminant_Name, ", "),by=id][,dcast(.SD, id~V1,length)]
 #supf3=as.data.frame(supf2)
 outf=inner_join(supf3,samp2d,by=c("id"="#SAMPLEID")
                 
         
-
 prs=st_as_sf(pr)
 #prd=sample_data(pr)
 prds=prd
-
 sdat=sample_data(prd)
 prdw=st_join(wow,prd,join=st_nearest_feature)
 pd2=st_join(wow2,prs,join=st_nearest_feature)
-
-
 #basic idea suffix idea ,.x,.y
 #join dat and wow coords
+ctypes=c(rep("?",28),"c")
+dfd=read_csv("samps_dummied.csv")
+dfd=read_csv("samps_dummied.csv",col_types="????????????????????????????c")
+dfd2 = dfd %>% filter (Media=="Groundwater")
+dfd2=dfd2[,c(29,17:27)]
+dfd2= dfd2 %>% group_by(X.SampleID) %>% summarise_all(funs(sum))
+dfd3= dfd2 %>%  distinct(X.SampleID,.keep_all=T)
+samp=dfd3[,1]
+contam=dfd[,2:11]
+contam=contam[contam>1]=1
+dfd4=rbind(samp,contam)
 
+
+
+outf=inner_join(dfd4,sampd2,by=c("X.SampleID"="#SampleID"))
+
+write_csv(outf,"samp_withcontam.csv")
 ```
