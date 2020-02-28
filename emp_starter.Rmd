@@ -54,7 +54,6 @@ map_network(batmicrobiome)
 htmlmap_network(batmicrobiome)
 ```
 
-```{r}
 library(phyloseq)
 library(readr)
 library(biomformat)
@@ -79,18 +78,20 @@ otum=otu_table(gah,taxa_are_rows=TRUE)
 taxmeb=tax_table(mebtaxm)  #tax table
 #otu table
 #sdfm=otu_table(sdf,taxa_are_rows=T)
-mus=read_csv('ag-pgp-hmp-gg-cleaned-usonly.csv')
+mus=read_csv('ag-pgp-hmp-gg-cleaned_wll.csv')
 mus=as.data.frame(mus)
 rownames(mus)=mus[,1]
 mus=mus[,-1]
 rownames(mus)=paste0("X",rownames(mus))
 musm=sample_data(mus)
 #check sample names with sample_names()
-physeq=phyloseq(otum,taxmeb,mus,tree)
+physeq=phyloseq(otum,taxmeb,musm,tree)
 pr=prune_samples(sample_sums(physeq)>20,physeq)
 pr=transform_sample_counts(pr,function(x) x/ sum(x))
 pfr=filter_taxa(pr,function(x) mean(x) > 1e-5,TRUE)
-p=plot_bar(pfr,"SAMPLETYPE","Abundance",",Phylum")
+saveRDS("phyloseq_filtered.RDS")
+```{r}
+#p=plot_bar(pfr,"SAMPLETYPE","Abundance",",Phylum")
 #pfr_ab=prune_samples(sample_sums(pfr)>=20, TRUE)
 #
 
@@ -122,30 +123,94 @@ library(leaflet)
 library(sf)
 library(rnaturalearth)
 library(rnaturalearthdata)
+library(rgeos)
 world <- ne_countries(scale='medium',returnclass = 'sf')
 usa <- subset(world, admin == "United States of America")
 #st_intersects
 sampd2= sampd %>% filter(!(LONGITUDE %in% c("Unknown", "Unspecified","no_data") ))
+write_csv(sampd2,"ag-pgp-hmp-gg-cleaned_wll.csv")
 
 sampd2$LONGITUDE=as.numeric(sampd2$LONGITUDE)
 sampd2$LATITUDE=as.numeric(sampd2$LATITUDE)
+dat=data.frame(id=sampd2[,1],lon=as.numeric(sampd2$LONGITUDE),lat=as.numeric(sampd2$LATITUDE))
 
-smpsf=st_as_sf(sampd2,coords=c("LONGITUDE","LATITUDE"),crs=4326)
+smpsf=st_as_sf(dat,coords=c("lon","lat"),crs=4326)
 #default lat/lon coordinate system is 4326
-st_crs(smpsf)=4326
+#st_crs(smpsf)=4326
 
 
 
-smpsf= 
-us_samp2=
+#smpsf= 
+#us_samp2=
 us_samp = st_join(smpsf,usa,join=st_within)
 
-sampo=as.data.frame(us_samp)
+hm=as.data.frame(us_samp)0
+coord=st_coordinates(hm)
+hm=rbind(hm,coord)
+#sampo=as.data.frame(us_samp)
 
 library(maps)
 ll=data.frame(Lat=as.numeric(sampd2$LATITUDE),Lon=as.numeric(sampd2$LONGITUDE))
 leaflet(ll) %>% addTiles() %>% addCircles()
 
 tax=read_tsv('07-taxa/100nt/ag-cleaned_L2.txt')
+
+```
+
+ml stuff
+
+
+```{r}
+p=readRDS('phyloseq_filtered.RDS')
+library(phylogeo)
+pr=transform_sample_counts(p,function(OTU) OTU/ sum(OTU))
+
+dm=data.frame(stype=sample_data(pr)$SAMPLETYPE,otu_table(pr))
+
+
+library(SIAMCAT)
+
+wow=read_csv("Superfund_final_dataset.csv")
+prs=st_as_sf(pr)
+wow2=wow %>% filter(!is.na(latitude))
+wow2=wow2 %>% filter(!is.na(longitude))
+wow3= wow2 %>% distinct(EPA_ID,Contaminant_Name,.keep_all=T)
+contam=st_as_sf(wow3,coords=c("longitude","latitude"),crs=4326) # need to give the columns
+
+#smpsf is the lat lon of the agp data
+supf=st_join(contam,smpsf,join=st_is_within_distance,dist=5000)
+nosup=st_join(contam,smpsf,join=st_is_within_distance,dist=10000)
+nosup=st_difference(nosup,supf)
+
+library(data.table)
+library(dummies)
+sup2=supf %>% filter(!is.na(X.SampleID))
+sup3=dummy.data.frame(sup2,names="Contaminant_Name")
+sup2 <- sup2 %>% separate_rows(Contaminant_Name, sep = ",")
+sup2$Contaminant_Name <- trimws(sup2$Contaminant_Name, "both")
+sup3=dummy.data.frame(sup2,)
+
+outf=sup3 %>% distinct(X.SampleID,.keep_all=T)
+out2= inner_join(sampd,outf,by=c("#SampleID"="X.SampleID"))
+write_csv(out2,"samps_wcontam.csv")
+
+
+#supf2=setDT(supf)[,strsplit(Contaminant_Name, ", "),by=id][,dcast(.SD, id~V1,length)]
+#supf3=as.data.frame(supf2)
+outf=inner_join(supf3,samp2d,by=c("id"="#SAMPLEID")
+                
+        
+
+prs=st_as_sf(pr)
+#prd=sample_data(pr)
+prds=prd
+
+sdat=sample_data(prd)
+prdw=st_join(wow,prd,join=st_nearest_feature)
+pd2=st_join(wow2,prs,join=st_nearest_feature)
+
+
+#basic idea suffix idea ,.x,.y
+#join dat and wow coords
 
 ```
